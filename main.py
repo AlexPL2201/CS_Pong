@@ -49,13 +49,26 @@ def parse_message(msg):
 
 def exec_command(cmd, args):
     if cmd == 'LOGIN':
-        login()
+        return login(args)
     elif cmd == 'REGISTER':
         return register(args)
 
 
-def login():
-    pass
+def login(args):
+    data = (args[0], args[1])
+    if is_player_registered(data):
+        return 0, f'[ERR] <{dt.now()}> An incorrect username or password has been entered.'
+    return 1, f'[SUCCESS] <{dt.now()}> The account was logged in successfully.'
+
+
+def is_player_registered(data):
+    con = sqlite3.connect(db_path)
+    cursor = con.cursor()
+    cursor.execute('SELECT PlayerName FROM Player WHERE (PlayerName, HashPassword) = (?, ?)', data)
+    is_correct = cursor.fetchone()
+    print(is_correct)
+    con.close()
+    return is_correct is None
 
 
 def register(args):
