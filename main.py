@@ -27,7 +27,7 @@ def server_listen(sock):
             print(f'[!] <{dt.now()}> Connected! Client`s address: {client_address}.')
             data = client_sock.recv(1024).decode('utf-8')
             command, arguments = parse_message(data)
-            print(f'[!] <{dt.now()}> Message received! Command: {command} | Arguments: {arguments[0]} {arguments[1]}.')
+            print(f'[!] <{dt.now()}> Message received! Command: {command} | Arguments: {arguments}.')
             status, log = exec_command(command, arguments)
             answer = f'Status: {status} | Message: {log}'
             client_sock.send(answer.encode('utf-8'))
@@ -50,6 +50,14 @@ def exec_command(cmd, args):
         return cmds.register(args)
     elif cmd == 'CHANGE': # CHANGE PlayerName Password NewPlayerName
         return cmds.change_player_name(args)
+    elif cmd == 'DELETE': # DELETE PlayerName Password
+        return cmds.del_profile(args)
+    elif cmd == 'GETSCORE': # GETSCORE PlayerName
+        return cmds.get_user_score(args)
+    elif cmd == 'ENDGAME': # ENDGAME PlayerName Score
+        return cmds.update_user_score(args)
+    elif cmd == 'TOPSCORE':
+        return cmds.get_top_players()
 
 
 if __name__ == '__main__':
