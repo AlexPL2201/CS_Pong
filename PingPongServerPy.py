@@ -77,7 +77,7 @@ def check_collision_circle_rect(circle_center, circle_radius, rect):
 
 class CPUPaddle(Paddle):
     def __init__(self, w, h, x, y, s):
-        super().__init__(w, h, x, y, s)
+        super().init(w, h, x, y, s)
 
     def update(self, ball_y):
         if self.y + self.height / 2 > ball_y:
@@ -114,21 +114,18 @@ class Game:
         cpu = CPUPaddle(25, 120, 10, Game.screen_height / 2 - 60, 6)
 
         while True:
-            data = client_sock.recv(1024)
-            print(f'[GAME] Message received {data.decode()}')
+            data = (client_sock.recv(1024)).decode()
+            data = data.split(' ')
+            print(f'[GAME] Message received {int(data[0])} {int(data[1])}')
             ball.update()
-            player.update(False, False)
+            player.update(int(data[0]), int(data[1]))
+
             cpu.update(ball.y)
 
             if check_collision_circle_rect(ball, ball.radius, player):
                 ball.speed_x *= -1
 
-            if check_collision_circle_rect(ball, ball.radius, player):
+            if check_collision_circle_rect(ball, ball.radius, cpu):
                 ball.speed_x *= -1
 
-            client_sock.send(f'{ball.x}, {ball.y}, {player.x}, {player.y}, {cpu.x}, {cpu.y}'.encode())
-
-
-
-
-
+            client_sock.send(f'{int(ball.x)}, {int(ball.y)}, {int(player.x)}, {int(player.y)}, {int(cpu.x)}, {int(cpu.y)}'.encode())
