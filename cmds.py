@@ -1,6 +1,8 @@
 import sqlite3
 from datetime import datetime as dt
+import threading
 import serv_settings
+import PingPongServerPy as Pong
 
 
 def login(args):
@@ -84,6 +86,15 @@ def get_top_players():
     for player in top_players:
         msg += f'{player[0]} {player[1]} '
     return 1, f"[SUCCESS] {msg}"
+
+
+def run(args):
+    if is_player_registered((args[0], args[1])):
+        return 0, '[ERR] An incorrect username or password has been entered',
+    thread = threading.Thread(target=Pong.Game.play)
+    thread.start()
+    return serv_settings.game_port, 'Game port'
+
 
 
 # Child commands

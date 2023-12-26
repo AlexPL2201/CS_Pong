@@ -1,5 +1,4 @@
 import socket
-import sqlite3
 from datetime import datetime as dt
 import serv_settings
 import cmds
@@ -58,6 +57,8 @@ def exec_command(cmd, args):
         return cmds.update_user_score(args)
     elif cmd == 'TOPSCORE':
         return cmds.get_top_players()
+    elif cmd == 'RUNGAME': # RUNGAME PlayerName Password
+        return cmds.run(args)
 
 
 if __name__ == '__main__':
