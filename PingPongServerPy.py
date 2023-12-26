@@ -77,7 +77,7 @@ def check_collision_circle_rect(circle_center, circle_radius, rect):
 
 class CPUPaddle(Paddle):
     def __init__(self, w, h, x, y, s):
-        super().init(w, h, x, y, s)
+        super().__init__(w, h, x, y, s)
 
     def update(self, ball_y):
         if self.y + self.height / 2 > ball_y:
@@ -93,39 +93,57 @@ class Game:
     screen_width = 1280
     screen_height = 800
 
-
     @staticmethod
-    def play():
+    def launch_server():
         try:
             sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock2.bind((serv_settings.ip, serv_settings.game_port))
-            serv_settings.game_port += 1
             print(f'[GAME] The server is running. IP: {serv_settings.ip} Port {serv_settings.game_port}.')
+            return sock2
 
         except socket.error as e:
             print(f"[GAME_ERR] Socket binding error: {e}.")
             sock2.close()
+        return -1
 
-        sock2.listen(1)
-        client_sock, client_address = sock2.accept()
+    @staticmethod
+    def listen(sock):
+        sock.listen(1)
+        return sock.accept()
+
+    @staticmethod
+    def parse_message(msg):
+        if not msg:
+            return 0
+        msg_list = msg.split(' ')
+        return msg_list
+
+    @staticmethod
+    def exec(args, ball, player, cpu, sock):
+        ball.update()
+        player.update(int(args[0]), int(args[1]))
+        cpu.update(ball.y)
+        if check_collision_circle_rect(ball, ball.radius, player):
+            ball.speed_x *= -1
+        if check_collision_circle_rect(ball, ball.radius, cpu):
+            ball.speed_x *= -1
+        msg = f'{int(ball.x)}, {int(ball.y)}, {int(player.x)}, {int(player.y)}, {int(cpu.x)}, {int(cpu.y)}'
+        msg += f' {Game.player1_score} {Game.player2_score}'
+        sock.send(msg.encode())
+
+    @staticmethod
+    def play():
+        sock2 = Game.launch_server()
+        serv_settings.game_port += 1
+        client_sock, client_address = Game.listen(sock2)
         print(f'[GAME] Connected! Client`s address: {client_address}')
         ball = Ball(Game.screen_width / 2, Game.screen_height / 2, 7, 7, 20)
         player = Paddle(25, 120, Game.screen_width - 35, Game.screen_height / 2 - 60, 6)
         cpu = CPUPaddle(25, 120, 10, Game.screen_height / 2 - 60, 6)
-
         while True:
-            data = (client_sock.recv(1024)).decode()
-            data = data.split(' ')
-            print(f'[GAME] Message received {int(data[0])} {int(data[1])}')
-            ball.update()
-            player.update(int(data[0]), int(data[1]))
-
-            cpu.update(ball.y)
-
-            if check_collision_circle_rect(ball, ball.radius, player):
-                ball.speed_x *= -1
-
-            if check_collision_circle_rect(ball, ball.radius, cpu):
-                ball.speed_x *= -1
-
-            client_sock.send(f'{int(ball.x)}, {int(ball.y)}, {int(player.x)}, {int(player.y)}, {int(cpu.x)}, {int(cpu.y)}'.encode())
+            args = Game.parse_message((client_sock.recv(1024)).decode())
+            if args:
+                Game.exec(args, ball, player, cpu, client_sock)
+            else:
+                break
+        sock2.close()
