@@ -127,12 +127,14 @@ class Game:
             ball.speed_x *= -1
         if check_collision_circle_rect(ball, ball.radius, cpu):
             ball.speed_x *= -1
-        msg = f'{int(ball.x)}, {int(ball.y)}, {int(player.x)}, {int(player.y)}, {int(cpu.x)}, {int(cpu.y)}'
+        msg = f'{int(ball.x)} {int(ball.y)} {int(player.x)} {int(player.y)} {int(cpu.x)} {int(cpu.y)}'
         msg += f' {Game.player1_score} {Game.player2_score}'
         sock.send(msg.encode())
 
     @staticmethod
     def play():
+        Game.player1_score = 0
+        Game.player2_score = 0
         sock2 = Game.launch_server()
         serv_settings.game_port += 1
         client_sock, client_address = Game.listen(sock2)
